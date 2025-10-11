@@ -4,13 +4,16 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import CategoryCard from "@/components/CategoryCard";
 import ProductCard from "@/components/ProductCard";
+import ProductDetailModal from "@/components/ProductDetailModal";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useLocation } from "wouter";
 import heroImage from "@assets/stock_images/modern_construction__205af1a1.jpg";
 import productImage from "@assets/stock_images/construction_materia_151531d6.jpg";
 
 export default function Home() {
   const { t } = useLanguage();
-  const [browseMode, setBrowseMode] = useState<"products" | "companies">("products");
+  const [, setLocation] = useLocation();
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
 
   const categories = [
     { icon: Hammer, label: t("cement"), count: 24 },
@@ -32,6 +35,10 @@ export default function Home() {
       image: productImage,
       companyPhone: "+251 11 123 4567",
       companyEmail: "contact@derba.com",
+      madeOf: "Portland clinker and gypsum",
+      description: "High-quality cement suitable for all types of construction projects. Meets Ethiopian standards.",
+      images: [productImage, productImage, productImage],
+      isOwner: false,
     },
     {
       id: "2",
@@ -43,6 +50,10 @@ export default function Home() {
       image: productImage,
       companyPhone: "+251 25 111 2233",
       companyEmail: "info@ethsteel.com",
+      madeOf: "High-grade steel alloy",
+      description: "Premium quality steel rebar for reinforced concrete structures. Corrosion resistant.",
+      images: [productImage, productImage, productImage],
+      isOwner: false,
     },
     {
       id: "3",
@@ -54,6 +65,10 @@ export default function Home() {
       image: productImage,
       companyPhone: "+251 11 555 6677",
       companyEmail: "sales@addistiles.com",
+      madeOf: "High-quality ceramic",
+      description: "Durable and beautiful ceramic tiles perfect for residential and commercial spaces.",
+      images: [productImage, productImage, productImage],
+      isOwner: false,
     },
     {
       id: "4",
@@ -65,6 +80,10 @@ export default function Home() {
       image: productImage,
       companyPhone: "+251 11 888 9900",
       companyEmail: "info@forestproducts.com",
+      madeOf: "Sustainable hardwood",
+      description: "Premium hardwood planks from sustainable sources. Perfect for flooring and furniture.",
+      images: [productImage, productImage, productImage],
+      isOwner: false,
     },
   ];
 
@@ -98,18 +117,17 @@ export default function Home() {
 
             <div className="flex items-center justify-center gap-2">
               <Button
-                variant={browseMode === "products" ? "default" : "outline"}
-                onClick={() => setBrowseMode("products")}
-                className={browseMode === "products" ? "" : "bg-background/80 backdrop-blur-sm"}
+                variant="default"
+                onClick={() => setLocation("/products")}
                 data-testid="button-browse-products"
               >
                 <Package className="h-4 w-4 mr-2" />
                 {t("browseProducts")}
               </Button>
               <Button
-                variant={browseMode === "companies" ? "default" : "outline"}
-                onClick={() => setBrowseMode("companies")}
-                className={browseMode === "companies" ? "" : "bg-background/80 backdrop-blur-sm"}
+                variant="outline"
+                onClick={() => setLocation("/companies")}
+                className="bg-background/80 backdrop-blur-sm"
                 data-testid="button-browse-companies"
               >
                 <Building2 className="h-4 w-4 mr-2" />
@@ -132,7 +150,10 @@ export default function Home() {
                 icon={category.icon}
                 label={category.label}
                 count={category.count}
-                onClick={() => console.log(`Category ${category.label} clicked`)}
+                onClick={() => {
+                  console.log(`Category ${category.label} clicked`);
+                  setLocation(`/products?category=${encodeURIComponent(category.label)}`);
+                }}
               />
             ))}
           </div>
@@ -149,12 +170,23 @@ export default function Home() {
               <ProductCard
                 key={product.id}
                 {...product}
-                onClick={() => console.log(`Product ${product.id} clicked`)}
+                onClick={() => {
+                  console.log(`Product ${product.id} clicked`);
+                  setSelectedProduct(product);
+                }}
               />
             ))}
           </div>
         </div>
       </section>
+
+      {selectedProduct && (
+        <ProductDetailModal
+          open={!!selectedProduct}
+          onOpenChange={(open) => !open && setSelectedProduct(null)}
+          product={selectedProduct}
+        />
+      )}
     </div>
   );
 }

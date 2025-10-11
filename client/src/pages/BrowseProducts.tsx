@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, SlidersHorizontal } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -19,11 +19,23 @@ import ProductCard from "@/components/ProductCard";
 import FilterPanel from "@/components/FilterPanel";
 import ProductDetailModal from "@/components/ProductDetailModal";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useLocation } from "wouter";
 import productImage from "@assets/stock_images/construction_materia_151531d6.jpg";
 
 export default function BrowseProducts() {
   const { t } = useLanguage();
+  const [location] = useLocation();
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.split('?')[1]);
+    const category = params.get('category');
+    if (category) {
+      setSelectedCategory(category);
+      console.log("Category filter applied:", category);
+    }
+  }, [location]);
 
   const products = Array.from({ length: 12 }, (_, i) => ({
     id: `${i + 1}`,

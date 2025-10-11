@@ -29,7 +29,9 @@ export function AppSidebar() {
   ];
 
   const handleLinkClick = () => {
-    setOpenMobile(false);
+    setTimeout(() => {
+      setOpenMobile(false);
+    }, 2000);
   };
 
   return (

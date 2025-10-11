@@ -1,4 +1,4 @@
-import { Search, User, Menu } from "lucide-react";
+import { Search, User, Menu, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -67,6 +67,10 @@ export default function Header({ onMenuClick, isAuthenticated = false }: HeaderP
                 <DropdownMenuItem data-testid="menu-edit-profile">
                   <User className="mr-2 h-4 w-4" />
                   {t("editProfile")}
+                </DropdownMenuItem>
+                <DropdownMenuItem data-testid="menu-add-product">
+                  <Plus className="mr-2 h-4 w-4" />
+                  {t("addProduct")}
                 </DropdownMenuItem>
                 <DropdownMenuItem data-testid="menu-register-company">
                   {t("registerCompany")}
