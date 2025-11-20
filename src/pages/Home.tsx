@@ -13,8 +13,8 @@ import CompanyDetailModal from "@/components/CompanyDetailModal"; // Import Comp
 import { useAuth } from "@/contexts/AuthContext"; // Import useAuth hook
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useLocation } from "wouter";
-import heroImage from "@assets/stock_images/modern_construction__205af1a1.jpg";
-import productImage from "@assets/stock_images/construction_materia_151531d6.jpg";
+// import heroImage from "@assets/stock_images/modern_construction__205af1a1.jpg";
+// import productImage from "@assets/stock_images/construction_materia_151531d6.jpg";
 import matter from "gray-matter"; // For parsing markdown front matter
 import yaml from 'js-yaml';
 
@@ -140,7 +140,7 @@ export default function Home() {
           category: p.categoryName,
           price: Number(p.price),
           unit: p.unit,
-          imageUrls: p.imageUrls || [productImage],
+          imageUrls: p.imageUrls || [],
           companyPhone: p.companyPhone,
           companyEmail: p.companyEmail,
           madeOf: p.madeOf,
@@ -250,11 +250,11 @@ export default function Home() {
     <div className="min-h-screen">
       <section className="relative h-[500px] flex items-center justify-center">
         <div className="absolute inset-0">
-          <img
+          {/* <img
             src={heroImage}
             alt="Construction site"
             className="w-full h-full object-cover"
-          />
+          /> */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-black/20" />
         </div>
 

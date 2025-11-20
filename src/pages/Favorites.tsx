@@ -1,7 +1,7 @@
 import { Heart } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import { useLanguage } from "@/contexts/LanguageContext";
-import productImage from "@assets/stock_images/construction_materia_151531d6.jpg";
+// import productImage from "@assets/stock_images/construction_materia_151531d6.jpg";
 
 export default function Favorites() {
   const { t } = useLanguage();
@@ -16,7 +16,7 @@ export default function Favorites() {
       category: "Cement",
       price: 450,
       unit: "bag",
-      imageUrls: [productImage],
+      imageUrls: [],
       companyPhone: "+251 11 123 4567",
       companyEmail: "contact@derba.com",
     },
@@ -27,7 +27,7 @@ export default function Favorites() {
       category: "Steel",
       price: 2800,
       unit: "ton",
-      imageUrls: [productImage],
+      imageUrls: [],
       companyPhone: "+251 25 111 2233",
       companyEmail: "info@ethsteel.com",
     },
