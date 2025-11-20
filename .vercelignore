@@ -1,0 +1,13 @@
+.replit
+replit.md
+design_guidelines.md
+start-dev.cmd
+attached_assets/
+data/
+drizzle/
+server/uploads/
+*.sqbpro
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+.gitignore
