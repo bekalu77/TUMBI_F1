@@ -451,6 +451,11 @@ class SqliteStorage implements IStorage {
 
   async createJob(input: InsertJob & { id?: string }): Promise<Job> {
     const jobId = input.id || randomUUID();
+    
+    // Ensure array fields are stringified if they are arrays
+    const requiredSkills = Array.isArray(input.requiredSkills) ? JSON.stringify(input.requiredSkills) : input.requiredSkills;
+    const qualifications = Array.isArray(input.qualifications) ? JSON.stringify(input.qualifications) : input.qualifications;
+
     const jobData: Job = { // Explicitly type as Job
       id: jobId,
       title: input.title!,
@@ -463,8 +468,8 @@ class SqliteStorage implements IStorage {
       type: input.type ?? null,
       position: input.position ?? null,
       experience: input.experience ?? null,
-      requiredSkills: input.requiredSkills ?? null,
-      qualifications: input.qualifications ?? null,
+      requiredSkills: requiredSkills ?? null,
+      qualifications: qualifications ?? null,
       howToApply: input.howToApply ?? null,
       additionalNotes: input.additionalNotes ?? null,
       applicationLink: input.applicationLink ?? null,
@@ -476,12 +481,17 @@ class SqliteStorage implements IStorage {
   }
 
   async updateJob(id: string, input: Partial<InsertJob>): Promise<Job> {
-    // Filter out undefined values from the input to prevent Drizzle from trying to set them to NULL
-    const updatePayload: Partial<InsertJob> = {};
-    for (const key in input) {
-      if (input[key as keyof InsertJob] !== undefined) {
-        (updatePayload as any)[key] = input[key as keyof InsertJob];
-      }
+    const { requiredSkills, qualifications, ...restInput } = input;
+    const updatePayload: Partial<typeof jobs.$inferInsert> = { ...restInput };
+
+    // Handle requiredSkills: stringify if it's an array
+    if (requiredSkills !== undefined) {
+      updatePayload.requiredSkills = Array.isArray(requiredSkills) ? JSON.stringify(requiredSkills) : requiredSkills;
+    }
+    
+    // Handle qualifications: stringify if it's an array
+    if (qualifications !== undefined) {
+      updatePayload.qualifications = Array.isArray(qualifications) ? JSON.stringify(qualifications) : qualifications;
     }
 
     await db.update(jobs).set(updatePayload).where(eq(jobs.id, id));

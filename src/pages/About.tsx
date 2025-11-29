@@ -1,17 +1,11 @@
 import { Mail, Phone, MapPin } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-// import heroImage from "@assets/stock_images/modern_construction__205af1a1.jpg";
 
 export default function About() {
   return (
     <div className="min-h-screen">
       <section className="relative h-80 flex items-center justify-center">
         <div className="absolute inset-0">
-          {/* <img
-            src={heroImage}
-            alt="About us"
-            className="w-full h-full object-cover"
-          /> */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-black/20" />
         </div>
 

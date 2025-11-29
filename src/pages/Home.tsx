@@ -13,10 +13,7 @@ import CompanyDetailModal from "@/components/CompanyDetailModal"; // Import Comp
 import { useAuth } from "@/contexts/AuthContext"; // Import useAuth hook
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useLocation } from "wouter";
-// import heroImage from "@assets/stock_images/modern_construction__205af1a1.jpg";
-// import productImage from "@assets/stock_images/construction_materia_151531d6.jpg";
 import matter from "gray-matter"; // For parsing markdown front matter
-import yaml from 'js-yaml';
 
 // Define interfaces for data types
 interface Ad {
@@ -230,7 +227,7 @@ export default function Home() {
     }
   };
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
+  const handleSearchSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (searchInputValue.trim()) {
       setLocation(`/search?query=${encodeURIComponent(searchInputValue.trim())}`);
@@ -250,11 +247,6 @@ export default function Home() {
     <div className="min-h-screen">
       <section className="relative h-[500px] flex items-center justify-center">
         <div className="absolute inset-0">
-          {/* <img
-            src={heroImage}
-            alt="Construction site"
-            className="w-full h-full object-cover"
-          /> */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/40 to-black/20" />
         </div>
 
@@ -272,7 +264,7 @@ export default function Home() {
                 className="flex-1 pl-12 h-14 text-lg bg-transparent border-none focus-visible:ring-0 focus-visible:ring-offset-0"
                 data-testid="input-hero-search"
                 value={searchInputValue}
-                onChange={(e) => setSearchInputValue(e.target.value)}
+                onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSearchInputValue(e.target.value)}
               />
               <Button type="submit" className="h-12 px-8 mr-2 rounded-full">
                 {t("search")}
@@ -459,7 +451,7 @@ export default function Home() {
       {selectedProduct && (
         <ProductDetailModal
           open={!!selectedProduct}
-          onOpenChange={(open) => !open && setSelectedProduct(null)}
+          onOpenChange={(open: boolean) => !open && setSelectedProduct(null)}
           product={{
             ...selectedProduct,
             images: selectedProduct.imageUrls,
@@ -512,7 +504,7 @@ export default function Home() {
       {selectedCompany && (
         <CompanyDetailModal
           open={!!selectedCompany}
-          onOpenChange={(open) => !open && setSelectedCompany(null)}
+          onOpenChange={(open: boolean) => !open && setSelectedCompany(null)}
           company={{
             ...selectedCompany,
             products: [], // Products are fetched within the modal, so pass an empty array initially
