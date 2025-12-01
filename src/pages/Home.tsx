@@ -5,11 +5,11 @@ import { Button } from "@/components/ui/button";
 import CategoryCard from "@/components/CategoryCard";
 import ProductCard from "@/components/ProductCard";
 import AdCard from "@/components/AdCard";
-import TenderCard from "@/components/TenderCard"; // Import TenderCard
-import ArticleCard from "@/components/ArticleCard"; // Import ArticleCard
-import CompanyCard from "@/components/CompanyCard"; // Import CompanyCard
+import TenderCard from "@/components/TenderCard";
+import ArticleCard from "@/components/ArticleCard";
+import CompanyCard from "@/components/CompanyCard";
 import ProductDetailModal from "@/components/ProductDetailModal";
-import CompanyDetailModal from "@/components/CompanyDetailModal"; // Import CompanyDetailModal
+import CompanyDetailModal from "@/components/CompanyDetailModal";
 import { useAuth } from "@/contexts/AuthContext"; // Import useAuth hook
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useLocation } from "wouter";

@@ -1,10 +1,10 @@
 import { relations } from "drizzle-orm";
-import { sqliteTable, text, integer, real } from "drizzle-orm/sqlite-core";
+import { pgTable, text, timestamp, boolean, real, integer } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
 
 // Users
-export const users = sqliteTable("users", {
+export const users = pgTable("users", {
   id: text("id").primaryKey(),
   username: text("username").notNull().unique(),
   password: text("password").notNull(),
@@ -24,7 +24,7 @@ export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
 // Company Types
-export const companyTypes = sqliteTable("company_types", {
+export const companyTypes = pgTable("company_types", {
   id: text("id").primaryKey(),
   name: text("name").notNull().unique(),
 });
@@ -32,7 +32,7 @@ export const companyTypes = sqliteTable("company_types", {
 export type CompanyType = typeof companyTypes.$inferSelect;
 
 // Companies
-export const companies = sqliteTable("companies", {
+export const companies = pgTable("companies", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   typeId: text("type_id").references(() => companyTypes.id), // Re-adding typeId
@@ -44,8 +44,8 @@ export const companies = sqliteTable("companies", {
   location: text("location"),
   description: text("description"),
   website: text("website"),
-  isVerified: integer("is_verified", { mode: "boolean" }).default(false),
-  createdAt: integer("created_at", { mode: "timestamp" }).default(new Date()),
+  isVerified: boolean("is_verified").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
   companyType: text("company_type"), // Keeping this for now, as it might be used for display or custom types
 });
 
@@ -55,7 +55,7 @@ export type InsertCompany = z.infer<typeof insertCompanySchema>;
 export type Company = typeof companies.$inferSelect;
 
 // Item Categories
-export const itemCategories = sqliteTable("item_category", {
+export const itemCategories = pgTable("item_category", {
   id: text("id").primaryKey(),
   category: text("category").notNull(),
   type: text("type").notNull(),
@@ -68,7 +68,7 @@ export const insertItemCategorySchema = createInsertSchema(itemCategories);
 export type InsertItemCategory = z.infer<typeof insertItemCategorySchema>;
 
 // Items (formerly Products)
-export const items = sqliteTable("items", {
+export const items = pgTable("items", {
   id: text("id").primaryKey(),
   name: text("name").notNull(),
   companyId: text("company_id").references(() => companies.id),
@@ -78,7 +78,7 @@ export const items = sqliteTable("items", {
   unit: text("unit"),
   description: text("description"),
   imageUrls: text("image_urls"), // Storing as JSON string
-  createdAt: integer("created_at", { mode: "timestamp" }).default(new Date()),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const insertItemSchema = createInsertSchema(items, {
@@ -109,7 +109,7 @@ export type ItemWithRelations = Item & {
 export type Product = Item;
 
 // Locations
-export const locations = sqliteTable("locations", {
+export const locations = pgTable("locations", {
   id: text("id").primaryKey(),
   city: text("city").notNull(),
   region: text("region"),
@@ -118,7 +118,7 @@ export const locations = sqliteTable("locations", {
 export type Location = typeof locations.$inferSelect;
 
 // RFQ (Request for Quotation)
-export const rfq = sqliteTable("rfq", {
+export const rfq = pgTable("rfq", {
   id: text("id").primaryKey(),
   itemName: text("item_name").notNull(),
   companyId: text("company_id").references(() => companies.id),
@@ -131,7 +131,7 @@ export const rfq = sqliteTable("rfq", {
 export type Rfq = typeof rfq.$inferSelect;
 
 // Jobs
-export const jobs = sqliteTable("jobs", {
+export const jobs = pgTable("jobs", {
   id: text("id").primaryKey(),
   title: text("title").notNull(),
   category: text("category"),
@@ -148,8 +148,8 @@ export const jobs = sqliteTable("jobs", {
   howToApply: text("how_to_apply"),
   additionalNotes: text("additional_notes"),
   applicationLink: text("application_link"),
-  deadline: integer("deadline", { mode: "timestamp" }),
-  createdAt: integer("created_at", { mode: "timestamp" }).default(new Date()),
+  deadline: timestamp("deadline"),
+  createdAt: timestamp("created_at").defaultNow(),
 });
 
 export const insertJobSchema = createInsertSchema(jobs, {
@@ -169,7 +169,7 @@ export type InsertJob = z.infer<typeof insertJobSchema>;
 export type Job = typeof jobs.$inferSelect; // Revert to Drizzle's inferred type
 
 // Units
-export const units = sqliteTable("units", {
+export const units = pgTable("units", {
   id: text("id").primaryKey(),
   name: text("name").notNull().unique(),
 });

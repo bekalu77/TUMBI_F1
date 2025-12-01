@@ -9,18 +9,23 @@ type DrizzleRawItemWithRelations = typeof items.$inferSelect & {
   category: ItemCategory | null;
 };
 
+import "dotenv/config";
+
+const cloudflareWorkerUrl = process.env.CLOUDFLARE_WORKER_URL;
+
 // Helper to parse imageUrls from JSON string to array and return ItemWithRelations
 const parseImageUrls = (item: DrizzleRawItemWithRelations): ItemWithRelations => {
   let parsedImageUrls: string[] | null = null;
   if (item.imageUrls && typeof item.imageUrls === 'string') {
     try {
-      parsedImageUrls = JSON.parse(item.imageUrls) as string[];
+      const imageUrls = JSON.parse(item.imageUrls) as string[];
+      parsedImageUrls = imageUrls.map(url => `${cloudflareWorkerUrl}/${url}`);
     } catch (e) {
       console.error("Failed to parse imageUrls JSON string:", e);
       parsedImageUrls = []; // Return empty array on parse error
     }
   } else if (Array.isArray(item.imageUrls)) {
-    parsedImageUrls = item.imageUrls; // Already an array (shouldn't happen if from DB directly, but for safety)
+    parsedImageUrls = item.imageUrls.map(url => `${cloudflareWorkerUrl}/${url}`);
   } else {
     parsedImageUrls = []; // Default to empty array if null or unexpected type
   }
@@ -100,7 +105,7 @@ export interface IStorage {
   deleteJob(id: string): Promise<void>;
 }
 
-class SqliteStorage implements IStorage {
+class PostgresStorage implements IStorage {
   // users
   async getUser(id: string): Promise<User | undefined> {
     return db.query.users.findFirst({ where: eq(users.id, id) });
@@ -503,4 +508,4 @@ class SqliteStorage implements IStorage {
   }
 }
 
-export const storage = new SqliteStorage();
+export const storage = new PostgresStorage();

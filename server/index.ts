@@ -54,7 +54,8 @@ app.use((req, res, next) => {
 
 (async () => {
   if (app.get("env") !== "development") {
-    serveStatic(app);
+    const distPath = path.join(process.cwd(), "dist");
+    app.use(express.static(distPath));
   }
 
   const server = await registerRoutes(app);

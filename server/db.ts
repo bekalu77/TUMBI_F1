@@ -1,17 +1,12 @@
-import Database from 'better-sqlite3';
-import { drizzle } from 'drizzle-orm/better-sqlite3';
+import "dotenv/config";
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
 import * as schema from "@shared/schema";
 
-// Ensure a consistent data directory at the repository root
-import path from 'path';
-import fs from 'fs';
-
-const dataDir = path.join(process.cwd(), 'data');
-if (!fs.existsSync(dataDir)) {
-	fs.mkdirSync(dataDir, { recursive: true });
+if (!process.env.DATABASE_URL) {
+  throw new Error("DATABASE_URL is not set");
 }
 
-const dbFile = path.join(dataDir, 'database.sqlite');
-const sqlite = new Database(dbFile);
-sqlite.pragma('journal_mode = WAL');
-export const db = drizzle(sqlite, { schema });
+const connectionString = process.env.DATABASE_URL;
+const client = postgres(connectionString, { prepare: false });
+export const db = drizzle(client, { schema });
