@@ -15,21 +15,26 @@ const cloudflareWorkerUrl = process.env.CLOUDFLARE_WORKER_URL;
 
 // Helper to parse imageUrls from JSON string to array and return ItemWithRelations
 const parseImageUrls = (item: DrizzleRawItemWithRelations): ItemWithRelations => {
-  let parsedImageUrls: string[] | null = null;
+  let imageUrls: string[] = [];
   if (item.imageUrls && typeof item.imageUrls === 'string') {
     try {
-      const imageUrls = JSON.parse(item.imageUrls) as string[];
-      parsedImageUrls = imageUrls.map(url => `${cloudflareWorkerUrl}/${url}`);
+      imageUrls = JSON.parse(item.imageUrls);
     } catch (e) {
       console.error("Failed to parse imageUrls JSON string:", e);
-      parsedImageUrls = []; // Return empty array on parse error
     }
   } else if (Array.isArray(item.imageUrls)) {
-    parsedImageUrls = item.imageUrls.map(url => `${cloudflareWorkerUrl}/${url}`);
-  } else {
-    parsedImageUrls = []; // Default to empty array if null or unexpected type
+    imageUrls = item.imageUrls;
   }
-  // Return the item with parsed imageUrls and existing relations
+
+  const parsedImageUrls = imageUrls.map(url => {
+    // Check if the URL is already absolute
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      return url;
+    }
+    // If not, prepend the Cloudflare worker URL
+    return `${cloudflareWorkerUrl}/${url}`;
+  });
+
   return { ...item, imageUrls: parsedImageUrls };
 };
 

@@ -6,6 +6,8 @@ import { createUserSchema, insertUserSchema, insertItemCategorySchema, createCom
 import path from "path";
 import fs from "fs";
 import multer from "multer";
+import axios from "axios";
+import FormData from "form-data";
 import { z } from "zod";
 import session from "express-session";
 import MemoryStore from "memorystore";
@@ -105,29 +107,49 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }
 
   // Multer configuration
-  const multerStorage = multer.diskStorage({
-    destination: (req, file, cb) => {
-      cb(null, uploadsDir);
-    },
-    filename: (req, file, cb) => {
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-      // Different filenames for products vs companies
-      if (file.fieldname === 'productImages') {
-        cb(null, 'product-' + uniqueSuffix + path.extname(file.originalname));
-      } else if (file.fieldname === 'profilePicture') {
-        cb(null, 'profile-' + uniqueSuffix + path.extname(file.originalname));
-      } else {
-        cb(null, 'company-' + uniqueSuffix + path.extname(file.originalname));
-      }
-    },
-  });
+  const multerStorage = multer.memoryStorage();
 
-  const upload = multer({ 
+  const upload = multer({
     storage: multerStorage,
     limits: {
       fileSize: 5 * 1024 * 1024, // 5MB limit
     }
   });
+
+  const cloudflareProxy = async (req: Request, res: Response, next: () => void) => {
+    const singleFile = req.file as Express.Multer.File | undefined;
+    const multipleFiles = req.files as Express.Multer.File[] | undefined;
+
+    if (!singleFile && !multipleFiles) {
+      return next();
+    }
+
+    const files = multipleFiles || (singleFile ? [singleFile] : []);
+    if (files.length === 0) {
+      return next();
+    }
+    const form = new FormData();
+
+    for (const file of files) {
+      form.append(file.fieldname, file.buffer, file.originalname);
+    }
+
+    try {
+      const response = await axios.post(process.env.CLOUDFLARE_WORKER_URL!, form, {
+        headers: {
+          ...form.getHeaders(),
+        },
+      });
+
+      const uploaded = response.data;
+      // Ensure uploaded is always an array and pass it along
+      (req as any).uploadedFiles = Array.isArray(uploaded) ? uploaded : [uploaded];
+      next();
+    } catch (error) {
+      console.error("Error proxying to Cloudflare:", error);
+      res.status(500).json({ message: "Failed to upload files to Cloudflare" });
+    }
+  };
 
   const articleStorage = multer.diskStorage({
     destination: (req, file, cb) => {
@@ -183,11 +205,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use("/api/ad/banner", express.static(path.join(process.cwd(), "data", "ad", "banner")));
 
   // ========== AUTH ROUTES ==========
-  app.post("/api/register", upload.single("profilePicture"), async (req: Request, res: Response) => {
+  app.post("/api/register", upload.single("profilePicture"), cloudflareProxy, async (req: Request, res: Response) => {
     try {
       const parsed = createUserSchema.parse({
         ...req.body,
-        profilePictureUrl: req.file ? `/api/uploads/${req.file.filename}` : undefined,
+        profilePictureUrl: (req as any).uploadedFiles?.[0]?.url,
       });
       const existing = await storage.getUserByUsername(parsed.username);
       if (existing) {
@@ -200,7 +222,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.put("/api/users/:id", requireAuth, upload.single("profilePicture"), async (req: Request, res: Response) => {
+  app.put("/api/users/:id", requireAuth, upload.single("profilePicture"), cloudflareProxy, async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
       const userId = (req as any).userId;
@@ -216,7 +238,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const parsed = insertUserSchema.partial().parse({
         ...req.body,
-        profilePictureUrl: req.file ? `/api/uploads/${req.file.filename}` : undefined,
+        profilePictureUrl: (req as any).uploadedFiles?.[0]?.url,
       });
 
       const updatedUser = await storage.updateUser(id, parsed);
@@ -268,7 +290,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
 
-  app.put("/api/users/:id", requireAuth, upload.single("profilePicture"), async (req, res) => {
+  app.put("/api/users/:id", requireAuth, upload.single("profilePicture"), cloudflareProxy, async (req, res) => {
     try {
       const { id } = req.params;
       if (id !== (req as any).userId) {
@@ -276,7 +298,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       const parsed = insertUserSchema.partial().parse({
         ...req.body,
-        profilePictureUrl: req.file ? `/api/uploads/${req.file.filename}` : undefined,
+        profilePictureUrl: (req as any).uploadedFiles?.[0]?.url,
       });
       const user = await storage.updateUser(id, parsed);
       return res.json(user);
@@ -381,9 +403,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Create product with image upload
-  app.post("/api/products", requireAuth, upload.array("productImages", 3), async (req, res) => {
+  app.post("/api/products", requireAuth, upload.array("productImages", 3), cloudflareProxy, async (req, res) => {
     try {
-      if (!req.files || (req.files as Express.Multer.File[]).length === 0) {
+      if (!(req as any).uploadedFiles || (req as any).uploadedFiles.length === 0) {
         return res.status(400).json({ message: "At least one product image is required" });
       }
 
@@ -392,7 +414,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Invalid price format" });
       }
 
-      const imageUrls = (req.files as Express.Multer.File[]).map(file => `/api/uploads/${file.filename}`);
+      // Intelligently extract URLs from the response, which might be an array of strings or objects
+      const uploadedFiles = (req as any).uploadedFiles;
+      const imageUrls = uploadedFiles.map((file: any) => {
+        if (typeof file === 'string') {
+          return file; // If the item itself is a URL string
+        }
+        return file?.url || file?.secure_url || file?.link; // Common URL property names
+      }).filter((url: any): url is string => typeof url === 'string'); // Filter out any undefined/null URLs
+
+      if (imageUrls.length === 0) {
+        return res.status(400).json({ message: "Image upload succeeded, but no valid image URLs were found." });
+      }
 
       const itemPayload = {
         name: req.body.name,
@@ -420,7 +453,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Update product with image upload
-  app.put("/api/products/:id", requireAuth, upload.array("productImages", 3), async (req, res) => {
+  app.put("/api/products/:id", requireAuth, upload.array("productImages", 3), cloudflareProxy, async (req, res) => {
     try {
       const { id } = req.params;
       const userId = (req as any).userId;
@@ -448,8 +481,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       }
 
-      // Get new image URLs from uploaded files
-      const newImageUrls = (req.files as Express.Multer.File[]).map(file => `/api/uploads/${file.filename}`);
+      // Get new image URLs from uploaded files, using the same robust logic as the create route
+      const uploadedFiles = (req as any).uploadedFiles || [];
+      const newImageUrls = uploadedFiles.map((file: any) => {
+        if (typeof file === 'string') {
+          return file; // If the item is a URL string
+        }
+        return file?.url || file?.secure_url || file?.link; // Common URL property names
+      }).filter((url: any): url is string => typeof url === 'string'); // Filter out any invalid URLs
 
       // Combine existing and new image URLs
       const combinedImageUrls = [...imageUrlsToRetain, ...newImageUrls];
@@ -554,7 +593,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Create company with logo upload - SIMPLIFIED VERSION
 // Create company with logo upload - FIXED VERSION
-app.post("/api/companies", requireAuth, upload.single("companyLogo"), async (req, res) => {
+app.post("/api/companies", requireAuth, upload.single("companyLogo"), cloudflareProxy, async (req, res) => {
   try {
     console.log("=== COMPANY CREATION ===");
     console.log("Authenticated userId:", (req as any).userId);
@@ -563,7 +602,7 @@ app.post("/api/companies", requireAuth, upload.single("companyLogo"), async (req
     const payload = createCompanySchema.parse({
       ...req.body,
       userId: (req as any).userId,
-      logoUrl: req.file ? `/api/uploads/${req.file.filename}` : undefined,
+      logoUrl: (req as any).uploadedFiles?.[0]?.url,
       typeId: req.body.typeId, // Include typeId
       companyType: req.body.companyType, // Include companyType
     });
@@ -578,7 +617,7 @@ app.post("/api/companies", requireAuth, upload.single("companyLogo"), async (req
 });
 
   // Update company with optional logo upload
-  app.put("/api/companies/:id", requireAuth, upload.single("companyLogo"), async (req, res) => {
+  app.put("/api/companies/:id", requireAuth, upload.single("companyLogo"), cloudflareProxy, async (req, res) => {
     try {
       const { id } = req.params;
       const userId = (req as any).userId;
@@ -618,8 +657,8 @@ app.post("/api/companies", requireAuth, upload.single("companyLogo"), async (req
       });
 
       // Add logo URL if new logo was uploaded
-      if (req.file) {
-        updatePayload.logoUrl = `/api/uploads/${req.file.filename}`;
+      if ((req as any).uploadedFiles?.[0]?.url) {
+        updatePayload.logoUrl = (req as any).uploadedFiles[0].url;
       }
 
       console.log("Company update payload:", updatePayload);

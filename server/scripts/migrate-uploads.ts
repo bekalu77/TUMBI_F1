@@ -1,29 +1,36 @@
-import fs from 'fs';
-import path from 'path';
+import "dotenv/config";
+import axios from "axios";
+import FormData from "form-data";
+import fs from "fs";
+import path from "path";
 
-const repoRoot = process.cwd();
-const oldUploads = path.join(repoRoot, 'server', 'uploads');
-const newUploads = path.join(repoRoot, 'data', 'uploads');
+const uploadsDir = path.join(process.cwd(), "data", "uploads");
+const cloudflareWorkerUrl = process.env.CLOUDFLARE_WORKER_URL;
 
-if (!fs.existsSync(oldUploads)) {
-  console.log('No server/uploads directory found — nothing to do.');
-  process.exit(0);
+if (!cloudflareWorkerUrl) {
+  throw new Error("CLOUDFLARE_WORKER_URL is not set");
 }
 
-if (!fs.existsSync(newUploads)) {
-  fs.mkdirSync(newUploads, { recursive: true });
-}
+async function migrateUploads() {
+  const files = fs.readdirSync(uploadsDir);
 
-const files = fs.readdirSync(oldUploads);
-files.forEach((file) => {
-  const src = path.join(oldUploads, file);
-  const dest = path.join(newUploads, file);
-  try {
-    fs.renameSync(src, dest);
-    console.log(`moved ${file}`);
-  } catch (err) {
-    console.error(`failed to move ${file}:`, err);
+  for (const file of files) {
+    const filePath = path.join(uploadsDir, file);
+    const fileStream = fs.createReadStream(filePath);
+    const form = new FormData();
+    form.append("file", fileStream);
+
+    try {
+      const response = await axios.post(cloudflareWorkerUrl!, form, {
+        headers: {
+          ...form.getHeaders(),
+        },
+      });
+      console.log(`Uploaded ${file}:`, response.data);
+    } catch (error) {
+      console.error(`Failed to upload ${file}:`, error);
+    }
   }
-});
+}
 
-console.log('Done.');
+migrateUploads();
