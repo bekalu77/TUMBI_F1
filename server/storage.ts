@@ -12,7 +12,6 @@ type DrizzleRawItemWithRelations = typeof items.$inferSelect & {
 import "dotenv/config";
 
 const cloudflareWorkerUrl = process.env.CLOUDFLARE_WORKER_URL;
-console.log("CLOUDFLARE_WORKER_URL:", cloudflareWorkerUrl);
 
 // Helper to parse imageUrls from JSON string to array and return ItemWithRelations
 const parseImageUrls = (item: DrizzleRawItemWithRelations): ItemWithRelations => {
