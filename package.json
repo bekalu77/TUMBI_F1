@@ -2,7 +2,8 @@
   "name": "tumbi_f1",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "npm-run-all --parallel dev:*",
+    "dev:server": "tsx server/index.ts",
     "build": "vite build",
     "vercel-build": "vite build"
   },
@@ -74,7 +75,9 @@
     "@types/react-dom": "^18.2.22",
     "@vitejs/plugin-react": "^4.3.1",
     "drizzle-kit": "^0.31.7",
+    "npm-run-all": "^4.1.5",
     "tailwindcss-animate": "^1.0.7",
+    "tsx": "^4.21.0",
     "typescript": "^5.2.2",
     "vite": "^5.3.3"
   }
