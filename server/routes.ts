@@ -1,7 +1,7 @@
 import type { Express, Request, Response } from "express";
 import express from "express";
 import { createServer, type Server } from "http";
-import { storage } from "./storage";
+import { storage } from "./storage.js";
 import { createUserSchema, insertUserSchema, insertItemCategorySchema, createCompanySchema, insertItemSchema, Company, InsertCompany, createItemSchema, CreateItem, ItemWithRelations, InsertJob, createJobSchema, insertJobSchema, Job } from "@shared/schema";
 import path from "path";
 import fs from "fs";
