@@ -11,31 +11,23 @@ type DrizzleRawItemWithRelations = typeof items.$inferSelect & {
 
 import "dotenv/config";
 
-const cloudflareWorkerUrl = process.env.CLOUDFLARE_WORKER_URL;
-
 // Helper to parse imageUrls from JSON string to array and return ItemWithRelations
 const parseImageUrls = (item: DrizzleRawItemWithRelations): ItemWithRelations => {
   let imageUrls: string[] = [];
   if (item.imageUrls && typeof item.imageUrls === 'string') {
     try {
+      // The URLs stored in the database are now absolute URLs from R2,
+      // so we just need to parse them.
       imageUrls = JSON.parse(item.imageUrls);
     } catch (e) {
       console.error("Failed to parse imageUrls JSON string:", e);
     }
   } else if (Array.isArray(item.imageUrls)) {
+    // Handle cases where the data might already be an array
     imageUrls = item.imageUrls;
   }
 
-  const parsedImageUrls = imageUrls.map(url => {
-    // Check if the URL is already absolute
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-      return url;
-    }
-    // If not, prepend the Cloudflare worker URL
-    return `${cloudflareWorkerUrl}/${url}`;
-  });
-
-  return { ...item, imageUrls: parsedImageUrls };
+  return { ...item, imageUrls };
 };
 
 // Define a type for the raw job data from Drizzle

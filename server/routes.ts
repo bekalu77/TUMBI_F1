@@ -444,6 +444,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const payload = createItemSchema.parse(itemPayload); // Use createItemSchema
       console.log("Payload after schema parse:", payload);
 
+      console.log("!!! CRITICAL LOG: Final Image URLs being saved to database:", imageUrls);
+
       const product = await storage.createItem({ ...payload, id: randomUUID() }); // Add ID here
       res.status(201).json(product);
     } catch (error: any) {
