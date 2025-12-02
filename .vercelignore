@@ -1,0 +1,22 @@
+# Ignore backend
+backend
+
+# Ignore node_modules
+**/node_modules
+
+# Ignore environment variables
+.env
+**/.env
+
+# Ignore databases
+*.sqbpro
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
+
+# Other
+.replit
+replit.md
+design_guidelines.md
+start-dev.cmd
+attached_assets/

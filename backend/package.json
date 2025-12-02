@@ -1,0 +1,39 @@
+{
+  "name": "tumbi_f1-backend",
+  "type": "module",
+  "scripts": {
+    "start": "node --loader tsx server/index.ts",
+    "dev": "tsx server/index.ts",
+    "migrate:uploads": "tsx server/scripts/migrate-uploads.ts",
+    "migrate:data": "tsx server/scripts/migrate-data.ts",
+    "migrate:force": "tsx server/scripts/run-migrations.ts"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.3",
+    "drizzle-orm": "^0.44.7",
+    "drizzle-zod": "^0.8.3",
+    "express": "^5.1.0",
+    "express-session": "^1.18.2",
+    "gray-matter": "^4.0.3",
+    "js-yaml": "^4.1.1",
+    "memorystore": "^1.6.7",
+    "multer": "^2.0.2",
+    "nanoid": "^5.1.6",
+    "papaparse": "^5.5.3",
+    "pg": "^8.16.3",
+    "postgres": "^3.4.7",
+    "zod": "^4.1.12",
+    "better-sqlite3": "^12.5.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/express": "^5.0.5",
+    "@types/express-session": "^1.18.2",
+    "@types/js-yaml": "^4.0.9",
+    "@types/multer": "^2.0.0",
+    "@types/node": "^24.10.1",
+    "@types/pg": "^8.15.6",
+    "drizzle-kit": "^0.31.7",
+    "tsx": "^4.21.0"
+  }
+}
