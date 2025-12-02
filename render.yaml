@@ -13,10 +13,9 @@ services:
       - key: CLOUDFLARE_WORKER_URL
         value: "your_cloudflare_worker_url_here"
     disks:
-      - name:uploads
+      - name: uploads
         mountPath: /data/uploads
         sizeGB: 1
-
 databases:
   - name: tumbl-f1-db
     plan: free
